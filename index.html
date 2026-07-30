@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -151,9 +151,146 @@ html,body{min-height:100%;font-family:var(--sans);color:var(--text);background:v
 /* ── RESPONSIVE ── */
 @media(max-width:1120px){.mgrid{grid-template-columns:1fr 1fr;}.left-col{grid-column:1/3;}.center-col,.right-col{grid-column:span 1;}}
 @media(max-width:700px){.mgrid{grid-template-columns:1fr;}.left-col,.center-col,.right-col{grid-column:1;}.hdr-kpis{display:none;}}
+
+/* SPA shell: navegacion global y vistas sin recarga */
+.spa-shell{position:relative;z-index:1;display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh;}
+.global-sidebar{position:sticky;top:0;height:100vh;padding:1rem;border-right:1px solid var(--lineh);background:rgba(2,8,16,.96);backdrop-filter:blur(18px);display:flex;flex-direction:column;gap:1rem;}
+.global-brand{display:flex;align-items:center;gap:.7rem;padding:.35rem .2rem .9rem;border-bottom:1px solid var(--line);}
+.global-brand-mark{width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,var(--br),var(--gr));box-shadow:0 0 16px rgba(0,200,216,.55);}
+.global-brand strong{display:block;font-size:.95rem;}
+.global-brand small{display:block;margin-top:.12rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.11em;color:var(--text2);text-transform:uppercase;}
+.global-nav{display:grid;gap:.45rem;}
+.global-nav-link{display:block;text-decoration:none;color:var(--text2);font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--line);border-radius:7px;padding:.72rem .78rem;background:rgba(3,10,24,.72);transition:background .16s,border-color .16s,color .16s;}
+.global-nav-link:hover,.global-nav-link.active{color:#031015;background:var(--br);border-color:var(--br);}
+.global-state-card{margin-top:auto;border:1px solid var(--line);border-radius:8px;padding:.75rem;background:rgba(3,10,24,.72);}
+.global-state-card span,.global-state-card small{display:block;font-family:var(--mono);font-size:.58rem;color:var(--text2);}
+.global-state-card strong{display:block;margin:.28rem 0;font-family:var(--mono);font-size:.72rem;color:var(--gr);}
+.spa-main{min-width:0;}
+.spa-view{display:none;min-height:100vh;}
+.spa-view.active{display:block;}
+.captacion-view{padding:1rem .9rem 1.25rem;}
+.captacion-view .header{display:flex;justify-content:space-between;gap:1rem;align-items:center;margin-bottom:1rem;border:1px solid var(--lineh);border-radius:8px;background:var(--surf);padding:1rem;}
+.captacion-view .header h2{margin:0;font-size:1.16rem;}
+.captacion-view .header p{margin:.25rem 0 0;color:var(--text2);}
+.captacion-view .header-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+.captacion-view button,.captacion-view select{background:rgba(3,10,24,.78);color:var(--text);border:1px solid var(--lineh);border-radius:6px;padding:.52rem .72rem;}
+.captacion-view .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.75rem;margin-bottom:.75rem;}
+.captacion-view .kpi,.captacion-view .panel{background:var(--surf);border:1px solid var(--lineh);border-radius:8px;padding:.8rem;}
+.captacion-view .kpi h4{margin:0;color:var(--text2);font-size:.82rem;font-weight:500;}
+.captacion-view .kpi .value{margin-top:.35rem;font-family:var(--mono);font-size:1.35rem;font-weight:700;color:var(--br);}
+.captacion-view .kpi .trend{margin-top:.2rem;font-size:.78rem;color:var(--text2);}
+.captacion-view .grid.two{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,1fr);gap:.75rem;margin-bottom:.75rem;}
+.captacion-view .panel h3{margin:0 0 .55rem;font-size:.96rem;}
+.captacion-view .sub{color:var(--text2);margin-top:0;}
+.captacion-view .panel-title-row,.captacion-view .predictive-meta{display:flex;justify-content:space-between;align-items:center;gap:.75rem;}
+.captacion-view .badge{font-family:var(--mono);font-size:.68rem;padding:.2rem .48rem;border-radius:999px;}
+.captacion-view .badge.ok{background:rgba(0,217,126,.16);color:#a9f5d4;}
+.captacion-view .badge.warn{background:rgba(240,165,0,.16);color:#ffe1a6;}
+.captacion-view .badge.critical{background:rgba(255,64,68,.16);color:#ffc3c5;}
+.captacion-view .metric-list{display:grid;gap:.45rem;}
+.captacion-view .metric-item{display:flex;justify-content:space-between;gap:1rem;border-bottom:1px solid var(--line);padding-bottom:.38rem;}
+.captacion-view .simulation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.5rem;}
+.captacion-view .sim-card{border:1px solid var(--line);background:rgba(3,10,24,.58);border-radius:7px;padding:.58rem;}
+.captacion-view .sim-card strong{display:block;margin:.22rem 0;font-family:var(--mono);font-size:1.08rem;color:var(--br);}
+.captacion-view .interop-list{margin:0;padding-left:1rem;color:var(--text2);}
+.captacion-view table{width:100%;border-collapse:collapse;}
+.captacion-view th,.captacion-view td{text-align:left;padding:.48rem .35rem;font-size:.86rem;border-bottom:1px solid var(--line);}
+.captacion-view thead{color:var(--text2);}
+.captacion-view .state{padding:.18rem .44rem;border-radius:999px;font-family:var(--mono);font-size:.7rem;}
+.captacion-view .state.green{background:rgba(0,217,126,.16);color:#a9f5d4;}
+.captacion-view .state.yellow{background:rgba(240,165,0,.16);color:#ffe1a6;}
+.captacion-view .state.red{background:rgba(255,64,68,.16);color:#ffc3c5;}
+@media(max-width:1080px){.spa-shell{grid-template-columns:1fr}.global-sidebar{position:relative;height:auto}.global-nav{grid-template-columns:1fr 1fr}.captacion-view .grid.two{grid-template-columns:1fr}}
+@media(max-width:700px){.global-nav{grid-template-columns:1fr}.captacion-view .header{align-items:flex-start;flex-direction:column}.captacion-view{padding:.75rem}.captacion-view th,.captacion-view td{font-size:.78rem}}
 </style>
 </head>
 <body>
+<div class="spa-shell" data-spa-shell="oceano-twin">
+  <aside class="global-sidebar" aria-label="Navegacion principal del gemelo digital">
+    <div class="global-brand">
+      <span class="global-brand-mark"></span>
+      <div>
+        <strong>OceanoTech</strong>
+        <small>Digital Twin Suite</small>
+      </div>
+    </div>
+    <nav class="global-nav">
+      <a class="global-nav-link" href="#captacion" data-route-link="captacion">Captacion y Analisis</a>
+      <a class="global-nav-link" href="#gemelo" data-route-link="gemelo">Gemelo Digital</a>
+    </nav>
+    <div class="global-state-card">
+      <span>Estado de datos</span>
+      <strong id="globalStateStatus">Esperando API</strong>
+      <small id="globalStateTimestamp">Sin lectura sincronizada</small>
+    </div>
+  </aside>
+  <main class="spa-main" id="spaMain">
+    <section id="view-captacion" class="spa-view" data-route-view="captacion" aria-labelledby="captacionTitle">
+      <div class="captacion-view">
+
+        <header class="header">
+          <div>
+            <h2>Dashboard Industrial de Gemelo Digital Acuícola</h2>
+            <p>Monitoreo en tiempo real de jaulas, ambiente, biomasa y predicción operativa.</p>
+          </div>
+          <div class="header-actions">
+            <select id="capHorizon">
+              <option value="6">Horizonte: 6h</option>
+              <option value="12">Horizonte: 12h</option>
+              <option value="24">Horizonte: 24h</option>
+              <option value="48">Horizonte: 48h</option>
+            </select>
+            <button id="capRefresh">Actualizar</button>
+          </div>
+        </header>
+
+        <section class="kpi-grid" id="capKpiGrid"></section>
+
+        <section class="grid two">
+          <article class="panel">
+            <div class="panel-title-row">
+              <h3>Calidad de Agua (tiempo real)</h3>
+              <span id="capWaterBadge" class="badge ok">Estable</span>
+            </div>
+            <div class="metric-list" id="capWaterMetrics"></div>
+          </article>
+
+          <article class="panel">
+            <h3>Análisis Predictivo</h3>
+            <canvas id="capPredictiveChart" height="160"></canvas>
+            <div class="predictive-meta">
+              <span>Precisión esperada:</span>
+              <strong id="capAccuracy">-</strong>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid two">
+          <article class="panel">
+            <h3>Simulación en Frontera del Tiempo</h3>
+            <p class="sub">Predicción operativa oportuna según horizonte seleccionado.</p>
+            <div id="capSimulationCards" class="simulation-grid"></div>
+          </article>
+
+          <article class="panel">
+            <h3>Interoperabilidad del Ecosistema</h3>
+            <ul id="capInteropList" class="interop-list"></ul>
+          </article>
+        </section>
+
+        <section class="panel">
+          <h3>Alertas Visuales Operativas</h3>
+          <table>
+            <thead>
+              <tr><th>Estado</th><th>Jaula</th><th>Evento</th><th>Impacto</th><th>Acción recomendada</th></tr>
+            </thead>
+            <tbody id="capAlertsBody"></tbody>
+          </table>
+        </section>
+      
+      </div>
+    </section>
+    <section id="view-gemelo" class="spa-view" data-route-view="gemelo" aria-labelledby="gemeloTitle">
 <div class="ambient"><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="gbg"></div></div>
 
 <!-- ═══ HEADER ═══ -->
@@ -164,11 +301,75 @@ html,body{min-height:100%;font-family:var(--sans);color:var(--text);background:v
          alt="OceanoTech Innova"
          crossorigin="anonymous"
          onerror="this.style.display='none';document.getElementById('logoFb').style.display='block';">
-    <svg id="logoFb" style="display:none;" class="logo-svg-fb" viewBox="0 0 110 110">
-      <defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#00e5ff"/><stop offset="100%" stop-color="#0060ff"/></linearGradient></defs>
-      <polygon points="55,8 96,31 96,79 55,102 14,79 14,31" fill="none" stroke="url(#lg1)" stroke-width="4.5"/>
-      <path d="M36 53c7-7 13-7 20 0s13 7 20 0" stroke="url(#lg1)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-      <path d="M36 64c7-7 13-7 20 0s13 7 20 0" stroke="url(#lg1)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <svg id="logoFb" style="display:none;" class="logo-svg-fb" viewBox="0 0 320 320">
+      <defs>
+        <style>
+          .hex-stroke { fill: none; stroke: #4A9B9F; stroke-width: 8; stroke-linejoin: miter; }
+          .wave-stroke { fill: none; stroke: #4A9B9F; stroke-width: 7; stroke-linecap: round; }
+        
+/* SPA shell: navegacion global y vistas sin recarga */
+.spa-shell{position:relative;z-index:1;display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100vh;}
+.global-sidebar{position:sticky;top:0;height:100vh;padding:1rem;border-right:1px solid var(--lineh);background:rgba(2,8,16,.96);backdrop-filter:blur(18px);display:flex;flex-direction:column;gap:1rem;}
+.global-brand{display:flex;align-items:center;gap:.7rem;padding:.35rem .2rem .9rem;border-bottom:1px solid var(--line);}
+.global-brand-mark{width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,var(--br),var(--gr));box-shadow:0 0 16px rgba(0,200,216,.55);}
+.global-brand strong{display:block;font-size:.95rem;}
+.global-brand small{display:block;margin-top:.12rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.11em;color:var(--text2);text-transform:uppercase;}
+.global-nav{display:grid;gap:.45rem;}
+.global-nav-link{display:block;text-decoration:none;color:var(--text2);font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;border:1px solid var(--line);border-radius:7px;padding:.72rem .78rem;background:rgba(3,10,24,.72);transition:background .16s,border-color .16s,color .16s;}
+.global-nav-link:hover,.global-nav-link.active{color:#031015;background:var(--br);border-color:var(--br);}
+.global-state-card{margin-top:auto;border:1px solid var(--line);border-radius:8px;padding:.75rem;background:rgba(3,10,24,.72);}
+.global-state-card span,.global-state-card small{display:block;font-family:var(--mono);font-size:.58rem;color:var(--text2);}
+.global-state-card strong{display:block;margin:.28rem 0;font-family:var(--mono);font-size:.72rem;color:var(--gr);}
+.spa-main{min-width:0;}
+.spa-view{display:none;min-height:100vh;}
+.spa-view.active{display:block;}
+.captacion-view{padding:1rem .9rem 1.25rem;}
+.captacion-view .header{display:flex;justify-content:space-between;gap:1rem;align-items:center;margin-bottom:1rem;border:1px solid var(--lineh);border-radius:8px;background:var(--surf);padding:1rem;}
+.captacion-view .header h2{margin:0;font-size:1.16rem;}
+.captacion-view .header p{margin:.25rem 0 0;color:var(--text2);}
+.captacion-view .header-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+.captacion-view button,.captacion-view select{background:rgba(3,10,24,.78);color:var(--text);border:1px solid var(--lineh);border-radius:6px;padding:.52rem .72rem;}
+.captacion-view .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.75rem;margin-bottom:.75rem;}
+.captacion-view .kpi,.captacion-view .panel{background:var(--surf);border:1px solid var(--lineh);border-radius:8px;padding:.8rem;}
+.captacion-view .kpi h4{margin:0;color:var(--text2);font-size:.82rem;font-weight:500;}
+.captacion-view .kpi .value{margin-top:.35rem;font-family:var(--mono);font-size:1.35rem;font-weight:700;color:var(--br);}
+.captacion-view .kpi .trend{margin-top:.2rem;font-size:.78rem;color:var(--text2);}
+.captacion-view .grid.two{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,1fr);gap:.75rem;margin-bottom:.75rem;}
+.captacion-view .panel h3{margin:0 0 .55rem;font-size:.96rem;}
+.captacion-view .sub{color:var(--text2);margin-top:0;}
+.captacion-view .panel-title-row,.captacion-view .predictive-meta{display:flex;justify-content:space-between;align-items:center;gap:.75rem;}
+.captacion-view .badge{font-family:var(--mono);font-size:.68rem;padding:.2rem .48rem;border-radius:999px;}
+.captacion-view .badge.ok{background:rgba(0,217,126,.16);color:#a9f5d4;}
+.captacion-view .badge.warn{background:rgba(240,165,0,.16);color:#ffe1a6;}
+.captacion-view .badge.critical{background:rgba(255,64,68,.16);color:#ffc3c5;}
+.captacion-view .metric-list{display:grid;gap:.45rem;}
+.captacion-view .metric-item{display:flex;justify-content:space-between;gap:1rem;border-bottom:1px solid var(--line);padding-bottom:.38rem;}
+.captacion-view .simulation-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.5rem;}
+.captacion-view .sim-card{border:1px solid var(--line);background:rgba(3,10,24,.58);border-radius:7px;padding:.58rem;}
+.captacion-view .sim-card strong{display:block;margin:.22rem 0;font-family:var(--mono);font-size:1.08rem;color:var(--br);}
+.captacion-view .interop-list{margin:0;padding-left:1rem;color:var(--text2);}
+.captacion-view table{width:100%;border-collapse:collapse;}
+.captacion-view th,.captacion-view td{text-align:left;padding:.48rem .35rem;font-size:.86rem;border-bottom:1px solid var(--line);}
+.captacion-view thead{color:var(--text2);}
+.captacion-view .state{padding:.18rem .44rem;border-radius:999px;font-family:var(--mono);font-size:.7rem;}
+.captacion-view .state.green{background:rgba(0,217,126,.16);color:#a9f5d4;}
+.captacion-view .state.yellow{background:rgba(240,165,0,.16);color:#ffe1a6;}
+.captacion-view .state.red{background:rgba(255,64,68,.16);color:#ffc3c5;}
+@media(max-width:1080px){.spa-shell{grid-template-columns:1fr}.global-sidebar{position:relative;height:auto}.global-nav{grid-template-columns:1fr 1fr}.captacion-view .grid.two{grid-template-columns:1fr}}
+@media(max-width:700px){.global-nav{grid-template-columns:1fr}.captacion-view .header{align-items:flex-start;flex-direction:column}.captacion-view{padding:.75rem}.captacion-view th,.captacion-view td{font-size:.78rem}}
+</style>
+      </defs>
+      <!-- Outer hexagon -->
+      <polygon class="hex-stroke" points="160,30 270,90 270,210 160,270 50,210 50,90"/>
+      <!-- Second hexagon -->
+      <polygon class="hex-stroke" points="160,55 250,105 250,195 160,245 70,195 70,105"/>
+      <!-- Third hexagon -->
+      <polygon class="hex-stroke" points="160,80 230,120 230,180 160,220 90,180 90,120"/>
+      <!-- Inner hexagon -->
+      <polygon class="hex-stroke" points="160,105 210,135 210,165 160,195 110,165 110,135"/>
+      <!-- Wave lines inside -->
+      <path class="wave-stroke" d="M 130,145 Q 145,135 160,145 T 190,145"/>
+      <path class="wave-stroke" d="M 130,155 Q 145,165 160,155 T 190,155"/>
     </svg>
     <div class="hdr-brand"><strong>OceanoTech</strong><small>INNOVA</small></div>
   </div>
@@ -312,6 +513,10 @@ html,body{min-height:100%;font-family:var(--sans);color:var(--text);background:v
 
 <div class="ft wrap">OceanoTech Innova · Gemelo Digital Salmo salar · Modelo TGC v2.5 · Boids Biológico Validado · Datos ficticios · Propósito científico-demostrativo</div>
 
+    </section>
+  </main>
+</div>
+<script src="app.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════════════════
    § 1  MODELOS MATEMÁTICOS — Salmo salar
@@ -670,6 +875,8 @@ function setScenario(name) {
 }
 
 function stepSensors() {
+  const externalSensors = window.GlobalState?.getLatestSensorData?.();
+  if (externalSensors?.data) Object.assign(Sensors.tgt, externalSensors.data);
   const s = Sensors;
   Object.keys(s.cur).forEach(k => {
     const d = s.tgt[k] - s.cur[k];
@@ -1164,10 +1371,23 @@ function loop(ts) {
     if (steps > 0) updateUI(Sim.lastRes);
   }
 
-  // Renderizado
-  renderTank();
-  if (bioCV.clientWidth > 0) { bioCV.width = bioCV.clientWidth; renderBioChart(bioCV); }
-  if (sgrCV.clientWidth > 0) { sgrCV.width = sgrCV.clientWidth; renderSGRChart(sgrCV); }
+  window.GlobalState?.setTwinSnapshot?.({
+    day: Sim.day,
+    individualWeight: Sim.W,
+    population: Sim.N,
+    biomass: Sim.biomass,
+    accumulatedFeed: Sim.accumFeed,
+    accumulatedMortality: Sim.accumDead,
+    lastResult: Sim.lastRes,
+    sensors: { ...Sensors.cur }
+  });
+
+  // Renderizado: la simulacion sigue corriendo en #captacion, pero se evita pintar canvas ocultos.
+  if (window.AppRouter?.isRouteActive?.('gemelo') !== false) {
+    renderTank();
+    if (bioCV.clientWidth > 0) { bioCV.width = bioCV.clientWidth; renderBioChart(bioCV); }
+    if (sgrCV.clientWidth > 0) { sgrCV.width = sgrCV.clientWidth; renderSGRChart(sgrCV); }
+  }
 }
 
 window.addEventListener('load', () => {
@@ -1188,6 +1408,16 @@ window.addEventListener('load', () => {
     pushHist(r);
   }
   updateUI(Sim.lastRes);
+  window.GlobalState?.setTwinSnapshot?.({
+    day: Sim.day,
+    individualWeight: Sim.W,
+    population: Sim.N,
+    biomass: Sim.biomass,
+    accumulatedFeed: Sim.accumFeed,
+    accumulatedMortality: Sim.accumDead,
+    lastResult: Sim.lastRes,
+    sensors: { ...Sensors.cur }
+  });
   pushAlert(`Simulación iniciada — Día ${Sim.day} · Smolt 80g → objetivo 5,000g`, 'ok');
   pushAlert(`Jaula Ø40m × 20m · ${Sim.N.toFixed(0)} individuos · Boids Biológico Activo`, 'ok');
 
