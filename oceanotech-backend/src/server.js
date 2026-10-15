@@ -16,7 +16,7 @@ const app = express();
 app.set('trust proxy', 1);
 
 // ---------- CORS ----------
-// Acepta origenes explícitos + null (file:// en desarrollo)
+// Acepta orígenes explícitos y el origen null sólo en desarrollo (file://).
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5500')
   .split(',')
   .map(o => o.trim())
@@ -25,8 +25,11 @@ const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5500')
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Permitir sin origen (null = file://, o llamadas directas tipo curl)
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        (origin === 'null' && process.env.NODE_ENV !== 'production') ||
+        allowedOrigins.includes(origin)
+      ) {
         return callback(null, true);
       }
       return callback(new Error(`CORS: origen no permitido: ${origin}`));
@@ -69,29 +72,57 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Error interno del servidor.' });
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = Number(process.env.PORT || 4000);
 
-// On Windows, localhost resolves to ::1 (IPv6) first, so we listen on both
-// IPv4 (127.0.0.1) and IPv6 (::1) to make fetch('http://localhost:...') work
-// regardless of browser/OS DNS preference.
-const http = require('http');
+function validateConfiguration() {
+  const missing = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET']
+    .filter((key) => !process.env[key] || process.env[key].startsWith('cambia_'));
+  if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGIN) {
+    missing.push('CORS_ORIGIN');
+  }
+  if (process.env.JWT_ACCESS_SECRET && process.env.JWT_ACCESS_SECRET.length < 32) {
+    missing.push('JWT_ACCESS_SECRET (minimum 32 characters)');
+  }
+  if (process.env.JWT_REFRESH_SECRET && process.env.JWT_REFRESH_SECRET.length < 32) {
+    missing.push('JWT_REFRESH_SECRET (minimum 32 characters)');
+  }
+  if (process.env.JWT_ACCESS_SECRET === process.env.JWT_REFRESH_SECRET) {
+    missing.push('distinct JWT_ACCESS_SECRET and JWT_REFRESH_SECRET values');
+  }
+  if (missing.length) {
+    throw new Error(`Invalid backend configuration. Set: ${[...new Set(missing)].join(', ')}.`);
+  }
+}
 
-function startServer(host, port) {
-  return new Promise((resolve) => {
-    http.createServer(app).listen(port, host, () => {
-      console.log(`  Listening on http://${host === '::1' ? `[${host}]` : host}:${port}`);
-      resolve();
-    }).on('error', (err) => {
-      // Non-fatal: if IPv6 isn't available, just skip it
-      console.warn(`  Could not bind ${host}:${port} — ${err.message}`);
-      resolve();
-    });
+function listen(host, port) {
+  return new Promise((resolve, reject) => {
+    const server = app.listen(port, host, () => resolve(server));
+    server.once('error', reject);
   });
 }
 
-(async () => {
-  await startServer('127.0.0.1', PORT);
-  await startServer('::1', PORT);
+async function startServer() {
+  validateConfiguration();
+  if (process.env.NODE_ENV === 'production') {
+    await listen('0.0.0.0', PORT);
+    console.log(`OceanoTech AquaTwins backend listening on 0.0.0.0:${PORT}`);
+    return;
+  }
+
+  // On Windows, localhost may resolve to ::1, so keep both local loopback bindings.
+  const results = await Promise.allSettled([
+    listen('127.0.0.1', PORT),
+    listen('::1', PORT),
+  ]);
+  const started = results.filter((result) => result.status === 'fulfilled');
+  if (started.length === 0) {
+    throw results[0].reason;
+  }
+  for (const result of results) {
+    if (result.status === 'rejected') {
+      console.warn(`Could not bind a local address: ${result.reason.message}`);
+    }
+  }
   console.log(`OceanoTech AquaTwins backend — http://localhost:${PORT}`);
   console.log(`  POST /api/auth/login`);
   console.log(`  POST /api/auth/register`);
@@ -101,4 +132,13 @@ function startServer(host, port) {
   console.log(`  GET  /api/v1/twin/history/:twin_id`);
   console.log(`  POST /api/v1/readings`);
   console.log(`  GET  /api/v1/readings/latest`);
-})();
+}
+
+if (require.main === module) {
+  startServer().catch((err) => {
+    console.error(`Backend startup failed: ${err.message}`);
+    process.exitCode = 1;
+  });
+}
+
+module.exports = app;

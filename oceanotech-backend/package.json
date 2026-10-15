@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "seed": "node src/seed.js"
+    "seed": "node src/seed.js",
+    "test": "node --test tests/auth-api.test.js && node tests/test.domain.js && node tests/test.simulator.js"
   },
   "engines": {
     "node": ">=18.0.0"

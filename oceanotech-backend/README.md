@@ -14,10 +14,12 @@ npm install
 cp .env.example .env
 ```
 
-Abre `.env` y cambia **todos** los valores marcados, especialmente:
-- `JWT_ACCESS_SECRET` y `JWT_REFRESH_SECRET` (genera cada uno con
+Abre `.env` y configura los valores, especialmente:
+- `JWT_ACCESS_SECRET` y `JWT_REFRESH_SECRET`: usa valores aleatorios distintos
+  de al menos 32 caracteres (genera cada uno con
   `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`)
-- `CORS_ORIGIN` → la URL donde sirvas tu `login.html` (por ejemplo `http://localhost:5500`)
+- `CORS_ORIGIN` → origen exacto de la interfaz (protocolo + dominio + puerto),
+  por ejemplo `http://localhost:5500`; en producción configura el dominio HTTPS.
 
 ## 2. Correr
 
@@ -28,6 +30,37 @@ npm run dev         # con recarga automática
 
 El servidor queda en `http://localhost:4000`. La base de datos es un archivo SQLite
 (`oceanotech.sqlite`) que se crea solo la primera vez que corres el servidor.
+
+En producción el proceso escucha en `0.0.0.0` y en el puerto de `PORT` que asigne
+el hosting. Configura `NODE_ENV=production`, `PORT`, los dos secretos JWT y
+`CORS_ORIGIN`. Si se configura `DB_PATH`, debe apuntar a almacenamiento persistente
+del proveedor; el hosting debe enrutar el puerto público al proceso Node.
+
+En la interfaz, `index.html` permite fijar el origen del backend en
+`<meta name="aquatwins-api-base" content="">`. Déjalo vacío para usar el mismo
+origen (requiere que el hosting enrute `/api` al backend) o configura allí el
+origen HTTPS del servicio de API (sin `/api` al final). No uses `localhost` en
+la versión publicada: el navegador lo resolvería en el equipo de cada visitante.
+Por la cookie de refresco `SameSite=Strict`, usa el mismo origen (recomendado
+con proxy inverso) o subdominios del mismo sitio. Si frontend y API pertenecen
+a sitios distintos, la renovación de sesión requiere una decisión explícita
+sobre cookies cross-site y no está soportada por defecto.
+
+No hay endpoints de recuperación de contraseña en este backend. La interfaz no
+ofrece un flujo de restablecimiento; esta función requiere configurar y probar
+un proveedor de correo y tokens de recuperación antes de habilitarla.
+
+La cuenta demo no se crea automáticamente ni tiene credenciales predeterminadas.
+Para crear una en desarrollo, configura `DEMO_USER_EMAIL` y `DEMO_USER_PASSWORD`
+en el entorno local y ejecuta `npm run seed`. El comando no imprime esos valores.
+
+## 2.1 Pruebas
+
+```bash
+npm test
+```
+
+Las pruebas usan una base SQLite temporal y no alteran la base de datos local.
 
 ## 3. Endpoints
 

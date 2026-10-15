@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="aquatwins-api-base" content="">
 <title>OceanoTech — Iniciar sesión</title>
 <link rel="icon" type="image/png" href="assets/imagenes/favicon/favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -104,11 +105,11 @@
 
   .field-note{
     display:flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 22px;
+    font-size: 12.5px; color: var(--ink-soft); text-align: right;
   }
-  .field-note a{
+  .field-note{
     font-size: 12.5px; color: var(--ink-soft); text-decoration:none; border-bottom: 1px solid var(--hairline);
   }
-  .field-note a:hover{ color: var(--accent); border-bottom-color: var(--accent); }
 
   .error-msg{
     display:none;
@@ -134,15 +135,6 @@
   html.dark .submit-btn{ background: var(--accent); color:#0F1315; }
   .submit-btn:hover{ opacity:.88; }
 
-  .divider{
-    display:flex; align-items:center; gap: 12px; margin: 30px 0;
-  }
-  .divider .line{ flex:1; height:1px; background: var(--hairline); }
-  .divider span{
-    font-family:'IBM Plex Mono', monospace; font-size: 11px; text-transform: uppercase;
-    letter-spacing:.08em; color: var(--ink-soft);
-  }
-
   .signup-note{
     text-align:center; font-size: 13.5px; color: var(--ink-soft);
   }
@@ -162,35 +154,6 @@
 
   footer{ padding: 24px 0 40px; }
   footer p{ font-size: 12px; color: var(--ink-soft); margin: 16px 0 0; text-align:center; }
-
-  .demo-card{
-    border: 1px solid var(--hairline); border-radius: 4px;
-    padding: 14px 16px; background: var(--surface);
-    font-size: 13px; color: var(--ink-soft);
-  }
-  .demo-label{
-    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-    text-transform: uppercase; letter-spacing: .08em;
-    color: var(--ink-soft); margin-bottom: 10px;
-  }
-  .demo-row{
-    display: flex; justify-content: space-between; gap: 8px;
-    margin-bottom: 6px; align-items: center;
-  }
-  .demo-row span{ font-size: 12px; color: var(--ink-soft); }
-  .demo-row code{
-    font-family: 'IBM Plex Mono', monospace; font-size: 12px;
-    color: var(--accent); background: var(--accent-soft);
-    padding: 2px 6px; border-radius: 2px;
-  }
-  .demo-fill-btn{
-    width: 100%; margin-top: 10px; padding: 7px 0;
-    background: none; border: 1px solid var(--accent);
-    color: var(--accent); font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px; text-transform: uppercase; letter-spacing: .07em;
-    cursor: pointer; border-radius: 2px;
-  }
-  .demo-fill-btn:hover{ background: var(--accent-soft); }
 
   @media (max-width: 480px){
     .login-col{ padding: 20px 0 40px; }
@@ -223,7 +186,7 @@
           <input type="password" id="password" placeholder="••••••••" required>
         </div>
         <div class="field-note">
-          <a href="#">¿Olvidaste tu contraseña?</a>
+          <span>¿Olvidaste tu contraseña? Contacta al administrador para restablecer el acceso.</span>
         </div>
 
         <p class="error-msg" id="errorMsg">Correo o contraseña incorrectos.</p>
@@ -235,15 +198,6 @@
 
         <button type="submit" class="submit-btn" id="submitBtn">Entrar</button>
       </form>
-
-      <div class="divider"><div class="line"></div><span>demo</span><div class="line"></div></div>
-
-      <div class="demo-card" id="demoCard">
-        <div class="demo-label">Credenciales de demostración</div>
-        <div class="demo-row"><span>Email</span><code>demo@oceanotech.com</code></div>
-        <div class="demo-row"><span>Contraseña</span><code>AquaTwins2025!</code></div>
-        <button type="button" class="demo-fill-btn" onclick="fillDemo()">Completar formulario</button>
-      </div>
 
       <p class="signup-note" style="margin-top:1.2rem;">¿No tienes cuenta? <a href="#">Solicita acceso</a></p>
 
@@ -268,20 +222,40 @@
       document.documentElement.classList.contains('dark') ? 'Modo día' : 'Modo noche';
   });
 
-  // Discover which host the backend is reachable on.
-  // On Windows, localhost may resolve to ::1 (IPv6) while the server could only
-  // have bound to 127.0.0.1 (IPv4), or vice-versa. We try both and pick the one that answers.
-  let BACKEND_BASE = 'http://localhost:4000';
+  const configuredApiBase = document.querySelector('meta[name="aquatwins-api-base"]').content.trim();
+  const isLocalHost = ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+  const backendCandidates = configuredApiBase
+    ? [configuredApiBase.replace(/\/+$/, '')]
+    : window.location.protocol === 'file:'
+      ? ['http://localhost:4000', 'http://127.0.0.1:4000']
+      : isLocalHost
+        ? ['http://localhost:4000', 'http://127.0.0.1:4000']
+        : [window.location.origin];
+  let backendFailure = 'No se recibió respuesta del servicio de salud.';
 
   async function resolveBackend() {
-    const candidates = ['http://localhost:4000', 'http://127.0.0.1:4000'];
-    for (const base of candidates) {
+    const failures = [];
+    for (const base of backendCandidates) {
       try {
         const r = await fetch(base + '/api/health', { signal: AbortSignal.timeout(2500) });
-        if (r.ok) { BACKEND_BASE = base; return base; }
-      } catch { /* try next */ }
+        if (!r.ok) {
+          failures.push(`${base}: HTTP ${r.status}`);
+          continue;
+        }
+        const health = await r.json();
+        if (health.status === 'ok') return base;
+        failures.push(`${base}: respuesta de salud inesperada`);
+      } catch (err) {
+        const detail = err.name === 'TimeoutError'
+          ? 'tiempo de espera agotado'
+          : err instanceof TypeError
+            ? 'fallo de red, CORS o TLS'
+            : `respuesta inválida (${err.name})`;
+        failures.push(`${base}: ${detail}`);
+      }
     }
-    return null; // backend unreachable
+    backendFailure = failures.join('; ');
+    return null;
   }
 
   // Health-check on page load — show status indicator
@@ -303,14 +277,9 @@
       statusText.textContent      = 'Backend disponible';
     } else {
       statusDot.style.background  = '#C1443A';
-      statusText.textContent      = 'Backend no disponible — inicia el servidor en el puerto 4000';
+      statusText.textContent      = `Backend no disponible — ${backendFailure}`;
     }
   });
-
-  function fillDemo() {
-    document.getElementById('email').value    = 'demo@oceanotech.com';
-    document.getElementById('password').value = 'AquaTwins2025!';
-  }
 
   document.getElementById("loginForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -328,7 +297,7 @@
     const base = await resolveBackend();
 
     if (!base) {
-      errorMsg.textContent = "No hay conexión con el servidor. Ejecuta: cd oceanotech-backend && npm start";
+      errorMsg.textContent = `No hay conexión con la API (${backendFailure}).`;
       errorMsg.classList.add("show");
       submitBtn.disabled    = false;
       submitBtn.textContent = "Entrar";
@@ -358,8 +327,12 @@
         submitBtn.textContent = "Entrar";
       }
     } catch(err) {
-      console.error(err);
-      errorMsg.textContent  = "Error de red. Verifica que el servidor siga corriendo en el puerto 4000.";
+      const detail = err.name === 'TimeoutError'
+        ? 'tiempo de espera agotado'
+        : err instanceof TypeError
+          ? 'fallo de red, CORS o TLS'
+          : `respuesta inválida (${err.name})`;
+      errorMsg.textContent  = `Error al comunicarse con la API (${detail}).`;
       errorMsg.classList.add("show");
       submitBtn.disabled    = false;
       submitBtn.textContent = "Entrar";
