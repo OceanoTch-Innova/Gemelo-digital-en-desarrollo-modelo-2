@@ -1,0 +1,6 @@
+name = "gemelo-digital-en-desarrollo-modelo-2"
+compatibility_date = "2026-10-14"
+previews = {}
+
+[assets]
+directory = "./"

@@ -1,5 +1,28 @@
 # OceanoTech Digital Twin Dashboard v2.0 - Robust Edition
 
+## Cloudflare Worker previews
+
+The repository root contains the static login page, `Dashboard/`, and `assets/`.
+`wrangler.toml` serves these files as Workers Static Assets and defines the
+required empty `previews` block. The root package pins Wrangler 4.151.0, which
+supports Worker Previews. `.assetsignore` excludes the Express/SQLite backend,
+repository metadata, package/config files, tests, backups, and internal docs from
+the public asset bundle.
+
+Run `npm ci` from the repository root, then `npx wrangler dev --local` to check
+the static site locally. Cloudflare Workers Builds keeps using its configured
+`npx wrangler preview` command; this repository change does not change the
+production build command or deploy the Express backend.
+
+The preview hosts only the frontend; it does not run `oceanotech-backend`.
+Login remains unavailable until a real API is deployed separately. To connect a
+preview, set the `aquatwins-api-base` meta value in `index.html` to the HTTPS
+base URL of that API (without `/api`), and configure the API's `CORS_ORIGIN` to
+allow the exact preview origin. For refresh-cookie support, serve the API under
+the same site as the preview, preferably through a reverse proxy; the backend's
+`SameSite=Strict` cookie does not support unrelated cross-site hosts. The
+preview does not simulate successful authentication.
+
 ## 🎯 Overview
 
 This is a significantly enhanced version of the OceanoTech Innova Digital Twin Dashboard for Salmo salar (Atlantic Salmon) aquaculture simulation. The v2.0 "Robust Edition" includes comprehensive improvements in architecture, error handling, performance, and maintainability.
