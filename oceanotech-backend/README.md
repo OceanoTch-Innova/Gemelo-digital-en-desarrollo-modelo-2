@@ -14,10 +14,12 @@ npm install
 cp .env.example .env
 ```
 
-Abre `.env` y cambia **todos** los valores marcados, especialmente:
-- `JWT_ACCESS_SECRET` y `JWT_REFRESH_SECRET` (genera cada uno con
+Abre `.env` y configura los valores, especialmente:
+- `JWT_ACCESS_SECRET` y `JWT_REFRESH_SECRET`: usa valores aleatorios distintos
+  de al menos 32 caracteres (genera cada uno con
   `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`)
-- `CORS_ORIGIN` → la URL donde sirvas tu `login.html` (por ejemplo `http://localhost:5500`)
+- `CORS_ORIGIN` → origen exacto de la interfaz (protocolo + dominio + puerto),
+  por ejemplo `http://localhost:5500`; en producción configura el dominio HTTPS.
 
 ## 2. Correr
 
@@ -28,6 +30,106 @@ npm run dev         # con recarga automática
 
 El servidor queda en `http://localhost:4000`. La base de datos es un archivo SQLite
 (`oceanotech.sqlite`) que se crea solo la primera vez que corres el servidor.
+
+En producción el proceso escucha en `0.0.0.0` y en el puerto de `PORT` que asigne
+el hosting. Configura `NODE_ENV=production`, `PORT`, los dos secretos JWT y
+`CORS_ORIGIN`. Si se configura `DB_PATH`, debe apuntar a almacenamiento persistente
+del proveedor; el hosting debe enrutar el puerto público al proceso Node.
+
+En la interfaz, `index.html` permite fijar el origen del backend en
+`<meta name="aquatwins-api-base" content="">`. Déjalo vacío para usar el mismo
+origen (requiere que el hosting enrute `/api` al backend) o configura allí el
+origen HTTPS del servicio de API (sin `/api` al final). No uses `localhost` en
+la versión publicada: el navegador lo resolvería en el equipo de cada visitante.
+Por la cookie de refresco `SameSite=Strict`, usa el mismo origen (recomendado
+con proxy inverso) o subdominios del mismo sitio. Si frontend y API pertenecen
+a sitios distintos, la renovación de sesión requiere una decisión explícita
+sobre cookies cross-site y no está soportada por defecto.
+
+No hay endpoints de recuperación de contraseña en este backend. La interfaz no
+ofrece un flujo de restablecimiento; esta función requiere configurar y probar
+un proveedor de correo y tokens de recuperación antes de habilitarla.
+
+La cuenta demo no se crea automáticamente ni tiene credenciales predeterminadas.
+Para crear una en desarrollo, configura `DEMO_USER_EMAIL` y `DEMO_USER_PASSWORD`
+en el entorno local y ejecuta `npm run seed`. El comando no imprime esos valores.
+
+## 2.1 Pruebas
+
+```bash
+npm test
+```
+
+Las pruebas usan una base SQLite temporal y no alteran la base de datos local.
+
+## 2.2 Despliegue de producción (Node.js separado de Cloudflare)
+
+Este backend **no es un Cloudflare Worker**: depende de Express, `bcrypt` y
+`better-sqlite3`, por lo que debe desplegarse en un servicio que ejecute un
+proceso Node.js persistente. No apuntes Cloudflare a esta carpeta como assets ni
+intentes ejecutar `src/server.js` en Workers.
+
+Configuración del servicio compatible con Node.js:
+
+| Ajuste | Valor |
+|---|---|
+| Directorio raíz | `oceanotech-backend` |
+| Instalación | `npm ci` |
+| Inicio | `npm start` |
+| Runtime | Node.js 18 o superior |
+| Puerto | el valor de `PORT` que asigne el proveedor; el servidor escucha en `0.0.0.0` en producción |
+| Health check | `GET /api/health` |
+
+Configura estos valores como variables/secretos del proveedor, nunca en Git ni
+en archivos publicados:
+
+```dotenv
+NODE_ENV=production
+# PORT lo asigna normalmente el proveedor; no lo fijes si su plataforma lo inyecta.
+PORT=4000
+DB_PATH=/ruta-del-volumen-persistente/oceanotech.sqlite
+CORS_ORIGIN=https://fix-auth-backend-connecti-gemelo-digital-en-desarrollo-modelo-2.igorvillota.workers.dev
+JWT_ACCESS_SECRET=<valor-aleatorio-distinto-de-al-menos-32-caracteres>
+JWT_REFRESH_SECRET=<otro-valor-aleatorio-distinto-de-al-menos-32-caracteres>
+PUBLIC_REGISTRATION_ENABLED=false
+```
+
+Genera los dos secretos JWT de forma independiente, por ejemplo con
+`node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`.
+Cuando exista el dominio final del frontend, añádelo o reemplaza el valor de
+`CORS_ORIGIN` por ese origen HTTPS exacto (se aceptan varios orígenes separados
+por coma). El proxy conserva el encabezado `Origin`, por lo que este ajuste debe
+incluir la URL de la vista previa mientras se la use.
+
+El Worker de Cloudflare usa un secreto llamado `API_ORIGIN`. Cuando el backend
+tenga una URL HTTPS real, desde la raíz del repositorio ejecuta:
+
+```bash
+npx wrangler secret put API_ORIGIN
+# Introduce sólo el origen, por ejemplo: https://api.tu-dominio.example
+```
+
+No se ha fijado ni inventado una URL de backend en este repositorio. Mientras el
+secreto no exista, `/api/*` devuelve `503` en vez de simular un inicio de sesión.
+
+### Persistencia SQLite
+
+`DB_PATH` debe apuntar a un volumen/disco persistente y escribible. El sistema de
+archivos efímero de un hosting serverless normalmente pierde `oceanotech.sqlite`
+en reinicios, redespliegues o escalado, y no es adecuado. SQLite también requiere
+una sola instancia escritora para esta aplicación; no escales horizontalmente sin
+un diseño de base de datos distinto.
+
+Antes de aprovisionar un disco, revisa el coste y las garantías de persistencia
+del proveedor elegido: algunos planes sólo ofrecen volúmenes persistentes de pago.
+Alternativas sin crear recursos ahora son usar una instancia Node de una sola
+réplica con almacenamiento persistente ya disponible, o planificar una migración
+a PostgreSQL administrado antes de escalar. Ningún recurso externo se crea desde
+este repositorio.
+
+El alta pública queda deshabilitada por defecto cuando `NODE_ENV=production`.
+Sólo habilítala mediante `PUBLIC_REGISTRATION_ENABLED=true` tras una decisión
+explícita de producto y una revisión de seguridad.
 
 ## 3. Endpoints
 

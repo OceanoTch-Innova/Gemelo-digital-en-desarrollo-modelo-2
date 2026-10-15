@@ -47,6 +47,15 @@ router.post(
     body('name').optional().isString().trim().isLength({ max: 120 }),
   ],
   (req, res) => {
+    // El acceso es restringido por defecto en producción. La habilitación es
+    // explícita para evitar exponer un alta pública por accidente.
+    if (
+      process.env.NODE_ENV === 'production'
+      && process.env.PUBLIC_REGISTRATION_ENABLED !== 'true'
+    ) {
+      return res.status(403).json({ error: 'El registro público no está habilitado.' });
+    }
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ error: 'Datos inválidos.' });

@@ -1,0 +1,10 @@
+{
+  "name": "aquatwins-static-frontend",
+  "private": true,
+  "scripts": {
+    "test:worker": "node --test tests/worker.test.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.151.0"
+  }
+}
