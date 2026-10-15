@@ -1,2 +1,7 @@
 /node_modules/
 /.wrangler/
+/.dev.vars
+/.dev.vars.*
+/.env
+/*.sqlite
+/*.sqlite-journal

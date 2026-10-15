@@ -7,7 +7,15 @@
 
 # Backend source, local data, and dependencies.
 /oceanotech-backend/
+/src/
 /**/node_modules/
+/**/tests/
+/**/*.test.*
+/**/*.sqlite
+/**/*.sqlite-*
+/**/*.db
+/.dev.vars
+/.dev.vars.*
 
 # Internal documentation, tests, and archived frontend files.
 /*.md

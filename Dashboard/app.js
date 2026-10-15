@@ -5,12 +5,17 @@
    v2.1 — Digital Twin Phase 1
    ═══════════════════════════════════════════════════════════════ */
 
-// On Windows, localhost may resolve to ::1 while the server binds on 127.0.0.1.
-// We probe both and pick whichever responds first.
-let BACKEND_URL = 'http://localhost:4000';
+// En Cloudflare, la API vive detrás del mismo origen mediante el Worker (/api/*).
+// En desarrollo local conservamos el sondeo de IPv4/IPv6 para el backend Express.
+const isLocalFrontend = window.location.protocol === 'file:'
+  || ['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname);
+const backendCandidates = isLocalFrontend
+  ? ['http://localhost:4000', 'http://127.0.0.1:4000']
+  : [window.location.origin];
+let BACKEND_URL = backendCandidates[0];
 
 async function resolveBackendUrl() {
-  for (const base of ['http://localhost:4000', 'http://127.0.0.1:4000']) {
+  for (const base of backendCandidates) {
     try {
       const r = await fetch(base + '/api/health', { signal: AbortSignal.timeout(2000) });
       if (r.ok) { BACKEND_URL = base; return base; }
@@ -33,7 +38,9 @@ const SENSOR_SCHEMA = Object.freeze({
 });
 
 const API_CONFIG = Object.freeze({
-  cleanSensorEndpoint: window.AQUATWIN_SENSOR_API || 'http://127.0.0.1:8000/api/sensores/limpios',
+  cleanSensorEndpoint: window.AQUATWIN_SENSOR_API || (isLocalFrontend
+    ? 'http://127.0.0.1:8000/api/sensores/limpios'
+    : `${window.location.origin}/api/sensores/limpios`),
   // These are getters so they always use the current (resolved) BACKEND_URL
   get twinStateEndpoint()      { return BACKEND_URL + '/api/v1/twin/state'; },
   get readingsLatestEndpoint() { return BACKEND_URL + '/api/v1/readings/latest'; },

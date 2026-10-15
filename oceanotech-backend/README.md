@@ -62,6 +62,75 @@ npm test
 
 Las pruebas usan una base SQLite temporal y no alteran la base de datos local.
 
+## 2.2 Despliegue de producción (Node.js separado de Cloudflare)
+
+Este backend **no es un Cloudflare Worker**: depende de Express, `bcrypt` y
+`better-sqlite3`, por lo que debe desplegarse en un servicio que ejecute un
+proceso Node.js persistente. No apuntes Cloudflare a esta carpeta como assets ni
+intentes ejecutar `src/server.js` en Workers.
+
+Configuración del servicio compatible con Node.js:
+
+| Ajuste | Valor |
+|---|---|
+| Directorio raíz | `oceanotech-backend` |
+| Instalación | `npm ci` |
+| Inicio | `npm start` |
+| Runtime | Node.js 18 o superior |
+| Puerto | el valor de `PORT` que asigne el proveedor; el servidor escucha en `0.0.0.0` en producción |
+| Health check | `GET /api/health` |
+
+Configura estos valores como variables/secretos del proveedor, nunca en Git ni
+en archivos publicados:
+
+```dotenv
+NODE_ENV=production
+# PORT lo asigna normalmente el proveedor; no lo fijes si su plataforma lo inyecta.
+PORT=4000
+DB_PATH=/ruta-del-volumen-persistente/oceanotech.sqlite
+CORS_ORIGIN=https://fix-auth-backend-connecti-gemelo-digital-en-desarrollo-modelo-2.igorvillota.workers.dev
+JWT_ACCESS_SECRET=<valor-aleatorio-distinto-de-al-menos-32-caracteres>
+JWT_REFRESH_SECRET=<otro-valor-aleatorio-distinto-de-al-menos-32-caracteres>
+PUBLIC_REGISTRATION_ENABLED=false
+```
+
+Genera los dos secretos JWT de forma independiente, por ejemplo con
+`node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`.
+Cuando exista el dominio final del frontend, añádelo o reemplaza el valor de
+`CORS_ORIGIN` por ese origen HTTPS exacto (se aceptan varios orígenes separados
+por coma). El proxy conserva el encabezado `Origin`, por lo que este ajuste debe
+incluir la URL de la vista previa mientras se la use.
+
+El Worker de Cloudflare usa un secreto llamado `API_ORIGIN`. Cuando el backend
+tenga una URL HTTPS real, desde la raíz del repositorio ejecuta:
+
+```bash
+npx wrangler secret put API_ORIGIN
+# Introduce sólo el origen, por ejemplo: https://api.tu-dominio.example
+```
+
+No se ha fijado ni inventado una URL de backend en este repositorio. Mientras el
+secreto no exista, `/api/*` devuelve `503` en vez de simular un inicio de sesión.
+
+### Persistencia SQLite
+
+`DB_PATH` debe apuntar a un volumen/disco persistente y escribible. El sistema de
+archivos efímero de un hosting serverless normalmente pierde `oceanotech.sqlite`
+en reinicios, redespliegues o escalado, y no es adecuado. SQLite también requiere
+una sola instancia escritora para esta aplicación; no escales horizontalmente sin
+un diseño de base de datos distinto.
+
+Antes de aprovisionar un disco, revisa el coste y las garantías de persistencia
+del proveedor elegido: algunos planes sólo ofrecen volúmenes persistentes de pago.
+Alternativas sin crear recursos ahora son usar una instancia Node de una sola
+réplica con almacenamiento persistente ya disponible, o planificar una migración
+a PostgreSQL administrado antes de escalar. Ningún recurso externo se crea desde
+este repositorio.
+
+El alta pública queda deshabilitada por defecto cuando `NODE_ENV=production`.
+Sólo habilítala mediante `PUBLIC_REGISTRATION_ENABLED=true` tras una decisión
+explícita de producto y una revisión de seguridad.
+
 ## 3. Endpoints
 
 | Método | Ruta                  | Qué hace                                             |

@@ -114,6 +114,34 @@ test('register validates credentials and login returns a session only for a vali
   assert.match(refreshCookie, /SameSite=Strict/i);
 });
 
+test('public registration is disabled by default in production', async () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+  const originalRegistrationFlag = process.env.PUBLIC_REGISTRATION_ENABLED;
+  process.env.NODE_ENV = 'production';
+  delete process.env.PUBLIC_REGISTRATION_ENABLED;
+
+  try {
+    const response = await fetch(`${baseUrl}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: `production-registration-${crypto.randomUUID()}@example.test`,
+        password: `Test-${crypto.randomBytes(16).toString('hex')}!`,
+      }),
+    });
+
+    assert.equal(response.status, 403);
+    assert.deepEqual(await response.json(), { error: 'El registro público no está habilitado.' });
+  } finally {
+    process.env.NODE_ENV = originalNodeEnv;
+    if (originalRegistrationFlag === undefined) {
+      delete process.env.PUBLIC_REGISTRATION_ENABLED;
+    } else {
+      process.env.PUBLIC_REGISTRATION_ENABLED = originalRegistrationFlag;
+    }
+  }
+});
+
 test('refresh, logout, and protected profile routes report missing authentication', async () => {
   const refresh = await fetch(`${baseUrl}/api/auth/refresh`, { method: 'POST' });
   assert.equal(refresh.status, 401);
